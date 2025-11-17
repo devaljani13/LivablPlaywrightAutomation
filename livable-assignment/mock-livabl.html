@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Livabl Mock – Full Filter Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #fafafa;
+    }
+    header {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 24px;
+      color: #333;
+    }
+    .search-bar, .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    select, input, button {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+    }
+    button {
+      background: #0078d7;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+    .ListingCard {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      padding: 16px;
+      width: 420px;
+      margin-bottom: 16px;
+    }
+    .title { font-size: 18px; font-weight: bold; }
+    .price { color: green; }
+    .filters label { font-size: 14px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <header>Livabl – New Construction Homes</header>
+
+  <!-- Home Page -->
+  <section id="homePage">
+    <div class="search-bar">
+      <input id="cityInput" placeholder="City, Neighborhood, etc">
+      <button id="searchBtn">Search</button>
+    </div>
+  </section>
+
+  <!-- Results Page -->
+  <section id="resultsPage" style="display:none;">
+    <h1 id="resultsHeading"></h1>
+
+    <div class="filters">
+      <label>For Sale:
+        <select id="saleStatus">
+          <option value="all">All</option>
+          <option value="selling">Selling</option>
+          <option value="registration">Registration</option>
+          <option value="pending">Pending</option>
+          <option value="soldout">Sold out</option>
+        </select>
+      </label>
+
+      <label>Home Type:
+        <select id="homeType">
+          <option value="all">All</option>
+          <option value="condo">Condo</option>
+          <option value="townhouse">Townhouse</option>
+          <option value="single">Single Family Home</option>
+        </select>
+      </label>
+
+      <label>Price Range:
+        <select id="priceRange">
+          <option value="all">Any</option>
+          <option value="low">$0–$499k</option>
+          <option value="mid">$500k–$999k</option>
+          <option value="high">$1M+</option>
+        </select>
+      </label>
+
+      <label>Bedrooms:
+        <select id="bedrooms">
+          <option value="all">All</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4+</option>
+        </select>
+      </label>
+
+      <label>Construction:
+        <select id="constructionStatus">
+          <option value="all">All</option>
+          <option value="pre">Preconstruction</option>
+          <option value="inprogress">Construction</option>
+          <option value="complete">Complete</option>
+        </select>
+      </label>
+
+      <label>Ownership:
+        <select id="ownership">
+          <option value="all">All</option>
+          <option value="freehold">Freehold</option>
+          <option value="condo">Condo</option>
+          <option value="coop">Co-op</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="listingsContainer"></div>
+  </section>
+
+  <script>
+    const listings = [
+      { title: 'Deval House 1', type: 'single', price: 511752, beds: 3, status: 'selling', construction: 'inprogress', ownership: 'freehold' },
+      { title: 'Deval House 2', type: 'townhouse', price: 819990, beds: 4, status: 'registration', construction: 'pre', ownership: 'condo' },
+      { title: 'Deval House 3', type: 'condo', price: 450000, beds: 2, status: 'selling', construction: 'pre', ownership: 'condo' },
+      { title: 'Deval Dream House', type: 'single', price: 1200000, beds: 4, status: 'pending', construction: 'complete', ownership: 'freehold' },
+      { title: 'Deval House 5', type: 'townhouse', price: 950000, beds: 3, status: 'soldout', construction: 'complete', ownership: 'coop' },
+    ];
+
+    const ranges = {
+      low: [0, 499999],
+      mid: [500000, 999999],
+      high: [1000000, Infinity]
+    };
+
+    const homePage = document.getElementById('homePage');
+    const resultsPage = document.getElementById('resultsPage');
+    const heading = document.getElementById('resultsHeading');
+    const container = document.getElementById('listingsContainer');
+
+    const val = id => document.getElementById(id).value;
+
+    // --- Search button ---
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const city = document.getElementById('cityInput').value || 'Toronto';
+      heading.textContent = `Pre Construction & New Homes For Sale In ${city}, ON`;
+
+      // Manually toggle visibility
+      homePage.style.display = 'none';
+      resultsPage.style.display = 'block';
+
+      renderListings(listings);
+    });
+
+    // --- Render Listings ---
+    function renderListings(list) {
+      container.innerHTML = '';
+      list.forEach(l => {
+        const div = document.createElement('div');
+        div.className = 'ListingCard';
+        div.innerHTML = `
+          <p class="title">${l.title}</p>
+          <p class="price">$${l.price.toLocaleString()}</p>
+          <p>${l.beds} Beds | ${l.type} | ${l.status}</p>`;
+        container.appendChild(div);
+      });
+    }
+
+    // --- Filters change ---
+    document.querySelectorAll('#resultsPage select').forEach(sel => {
+      sel.addEventListener('change', filterAll);
+    });
+
+    function filterAll() {
+      const sale = val('saleStatus'), type = val('homeType');
+      const price = val('priceRange'), bed = val('bedrooms');
+      const cons = val('constructionStatus'), owner = val('ownership');
+      let filtered = listings;
+
+      if (sale !== 'all') filtered = filtered.filter(l => l.status === sale);
+      if (type !== 'all') filtered = filtered.filter(l => l.type === type);
+      if (price !== 'all') {
+        const [min, max] = ranges[price];
+        filtered = filtered.filter(l => l.price >= min && l.price <= max);
+      }
+      if (bed !== 'all') filtered = filtered.filter(l => l.beds == bed || (bed === '4' && l.beds >= 4));
+      if (cons !== 'all') filtered = filtered.filter(l => l.construction === cons);
+      if (owner !== 'all') filtered = filtered.filter(l => l.ownership === owner);
+
+      renderListings(filtered);
+    }
+  </script>
+</body>
+</html>
